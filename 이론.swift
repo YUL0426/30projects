@@ -20,3 +20,32 @@ set.insert(10) // set에 값 넣어주기
 //set는 순서 x, 중복저장 x
 
 //7강 함수 사용법
+함수 정의와 호출
+func 함수명(파라미터이름:데이터 타입) -> 반환 타입 {
+  return 반환 값
+}
+//기본 형식
+// 어떤타입이 반환될건지...
+ex)
+func sum(a: Int, b: Int) -> Int {
+  return a+b
+}
+호출 : sum(a:5, b:3)
+
+func hello() -> String { //매개변수가 없을시 소괄호란을 공란으로
+  return "Hello"
+}
+
+//반환값이 없는함수
+func printName() ->  {
+
+}
+
+func sendMessage(from myName: String, to name: String) -> String {
+  return "Hello \(name)! I'm \(myName)"
+}
+
+sendMessage(from: "Gunter", to: "Json")
+
+
+  
