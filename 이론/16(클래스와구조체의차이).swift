@@ -1,3 +1,5 @@
+참조타입 vs 값타입
+
 class someClass {
   var count: Int = 0
 }
