@@ -20,4 +20,4 @@ let dog2 = Dog(name: "demon", gender: "male")
 dog2.name = "lemon" 
 //error, dog2가 상수로 선언되었기 때문에 변경 불가
 
-c
+
