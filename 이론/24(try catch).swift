@@ -6,4 +6,5 @@ enum PhoneError : Error {
   case battery(batteryLevel: Int)
 }
 
-throw PhoneError.
+throw PhoneError.batteryLow(batteryLevel: 20)
+//오류가 떳을시 던져준다.
