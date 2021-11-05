@@ -54,6 +54,7 @@ class ViewController: UIViewController {
     }
     
     func configureChartView(covidOverviewList: [CovidOverview]) {       //전달받은 것
+        self.pieChartView.delegate = self
         let entries = covidOverviewList.compactMap { [weak self] overview -> PieChartDataEntry? in
             guard let self = self else { return nil}
             return PieChartDataEntry(
@@ -123,3 +124,12 @@ class ViewController: UIViewController {
     }
 }
 
+extension ViewController: ChartViewDelegate {
+    func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
+        guard let covidDetailViewController = self.storyboard?.instantiateViewController(withIdentifier: "CovidDetailViewController") as? CovidDetailViewController else { return }
+        guard let covidOverview = entry.data as? CovidOverview else { return } // 엔트리 데이터를 입력시켜주는데, covidoverview type으로 다운캐스팅
+        covidDetailViewController.covidOverview = covidOverview //coviddetaiviewcontroller의 covidoverview프로퍼티에 선택된항목에 저장된 데이터를 전달
+        self.navigationController?.pushViewController(covidDetailViewController, animated: true)
+        //항목을 누르면 coviddetailviewcontroller에 표시가되도록.
+    } //차트에서 항목이 선택되었을 때 호출되는 메서드
+}
