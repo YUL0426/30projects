@@ -11,8 +11,7 @@ import Alamofire
 import Charts
 
 class ViewController: UIViewController {
-    
-    //Mark - IBOutlet
+
     @IBOutlet weak var totalCaseLabel: UILabel!
     @IBOutlet weak var newCaseLabel: UILabel!
     
@@ -20,17 +19,80 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.fetchCovidOverview(completionHandler: { [weak self] result in          // 강한변수(?)를 만들어준다.
+        self.fetchCovidOverview(completionHandler: { [weak self] result in
             guard let self = self else { return }
             switch result {
             case let .success(result):
-             debugPrint("success \(result)")
+                self.configureStarckView(koreaCovidOverview: result.korea)
+                let covidOverviewList = self.makeCovidOverviewList(cityCovidOverview: result)
+                self.configureChartView(covidOverviewList: covidOverviewList)
             case let .failure(error):
              debugPrint("error \(error)")
             }
         })
     }
     
+    func makeCovidOverviewList (
+        cityCovidOverview: CityCovidOverview
+    ) -> [CovidOverview] {
+        return [
+            cityCovidOverview.seoul,
+            cityCovidOverview.busan,
+            cityCovidOverview.daegu,
+            cityCovidOverview.incheon,
+            cityCovidOverview.gwangju,
+            cityCovidOverview.daejeon,
+            cityCovidOverview.ulsan,
+            cityCovidOverview.sejong,
+            cityCovidOverview.gyeonggi,
+            cityCovidOverview.chungbuk,
+            cityCovidOverview.chungnam,
+            cityCovidOverview.gyeongbuk,
+            cityCovidOverview.gyeongnam,
+            cityCovidOverview.jeju,
+        ]
+    }
+    
+    func configureChartView(covidOverviewList: [CovidOverview]) {       //전달받은 것
+        let entries = covidOverviewList.compactMap { [weak self] overview -> PieChartDataEntry? in
+            guard let self = self else { return nil}
+            return PieChartDataEntry(
+                value: self.removeFormatString(string: overview.newCase),
+                label: overview.countryName,
+                data: overview
+            )
+        }
+        //데이터셋 항목으로 묶기
+        let dataSet = PieChartDataSet(entries: entries, label: "코로나 발생 현황")
+        dataSet.sliceSpace = 1 //항목간 간격을 1피트로
+        dataSet.entryLabelColor = .black //항목이름을 검정색으로
+        dataSet.valueTextColor = .black
+        dataSet.xValuePosition = .outsideSlice //항목이름이 파이차트 바깥쪽선으로 표시되게
+        dataSet.valueLinePart1OffsetPercentage = 0.8
+        dataSet.valueLinePart1Length = 0.2
+        dataSet.valueLinePart2Length = 0.3
+               //파이차트뷰,데이터프로퍼티에
+        
+        dataSet.colors = ChartColorTemplates.vordiplom() +
+        ChartColorTemplates.joyful() +
+        ChartColorTemplates.liberty() +
+        ChartColorTemplates.pastel() +
+        ChartColorTemplates.material()
+        
+        self.pieChartView.data = PieChartData(dataSet: dataSet)
+        self.pieChartView.spin(duration: 0.3, fromAngle: self.pieChartView.rotationAngle, toAngle: self.pieChartView.rotationAngle + 80)
+    }
+    
+    func removeFormatString(string: String)  -> Double {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.number(from: string)?.doubleValue ?? 0
+    }
+    
+    func configureStarckView (koreaCovidOverview: CovidOverview) {
+        self.totalCaseLabel.text = "\(koreaCovidOverview.totalCase)명"
+        self.newCaseLabel.text = "\(koreaCovidOverview.newCase)명"
+    }
     //함수정의
     //completionHandler정의 :
     func fetchCovidOverview(
