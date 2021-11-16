@@ -24,10 +24,21 @@ class LoginViewController: UIViewController {
     }
     
     
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         //Navigation Bar 숨기기
         navigationController?.navigationBar.isHidden = true
     }
+    
+    
+    
+    @IBAction func GoogleLoginButtonTapped(_ sender: UIButton) {
+        //Firebase 인증 코드
+    }
+    
+    @IBAction func appleLoginButtonTapped(_ sender: UIButton) {
+    }
+    
 }
