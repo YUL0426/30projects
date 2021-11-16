@@ -1,5 +1,3 @@
-오늘은 스포티파이 앱을 통해 로그인하는 방법을 배울 것이다.
-
 //
 //  MainViewController.swift
 //  spotifyLoginSampleApp
@@ -8,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class MainViewController: UIViewController {
     @IBOutlet weak var welcomeLabel: UILabel!
@@ -19,11 +18,29 @@ class MainViewController: UIViewController {
     }
     //main에선 보여주지 않을 것
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
         navigationController?.navigationBar.isHidden = true
+        
+        let email = Auth.auth().currentUser?.email ?? "고객"
+        
+        welcomeLabel.text = """
+        환영합니다.
+        \(email)님
+        """
+        
     }
     
     
     @IBAction func logoutButtonTapped(_ sender: UIButton) {
+        let firebaseAuth = Auth.auth()
+        
+        do {
+            try firebaseAuth.signOut()
+            self.navigationController?.popToRootViewController(animated: true)
+        } catch let signOutError as NSError {
+            print("ERROR: singout \(signOutError.localizedDescription)")
+        }
         self.navigationController?.popToRootViewController(animated: true)
     }
 }
