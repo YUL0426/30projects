@@ -25,6 +25,9 @@ class ViewController: UIViewController {
     //타이머에 설정된 시간을 초로 저장하는 프로퍼티
     var duration = 60
     var timerStatus: TimerStatus = .end        //초기값end로 설정
+    var timer : DispatchSourceTimer?    //OPTIONAL이되도록 뒤에 물음표
+    var currentSeconds = 0
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,14 +45,40 @@ class ViewController: UIViewController {
         //버튼의 상태에 따라 title변경
     }
     
+    func startTimer() {
+        if self.timer == nil {
+            self.timer = DispatchSource.makeTimerSource(flags: [], queue: .main)
+            self.timer?.schedule(deadline: .now(), repeating: 1) // "지금부터" "1초마다" 반복
+            self.timer?.setEventHandler(handler: { [weak self] in
+                
+                
+                if self.currentSeconds  <= 0 {
+                    // 타이머종료
+                    self.stopTimer()
+                }
+            })
+            self.timer?.resume()
+        }
+    }
+    
+    func stopTimer() {
+        if self.timerStatus == .pause {
+            self.timer?.resume()
+        }
+        self.timerStatus = .end
+        self.cancelButton.isEnabled = false
+        self.setTimerInfoViewVisible(isHidden: true)    //time,프로그레스뷰가 표시되지 않도록
+        self.datePicker.isHidden = false // datepicker가다시표시되도록
+        self.toggleButton.isSelected = false // togglebutton 타이틀이 선택되도록
+        self.timer?.cancel()
+        self.timer = nil
+    }
+    
     @IBAction func tapCancelButton(_ sender: UIButton) {
         switch self.timerStatus {
         case .start, .pause:
-            self.timerStatus = .end
-            self.cancelButton.isEnabled = false
-            self.setTimerInfoViewVisible(isHidden: true)    //time,프로그레스뷰가 표시되지 않도록
-            self.datePicker.isHidden = false // datepicker가다시표시되도록
-            self.toggleButton.isSelected = false // togglebutton 타이틀이 시작이 되도록
+            self.stopTimer()
+            
         default:
             break
         }
@@ -59,21 +88,143 @@ class ViewController: UIViewController {
         self.duration = Int(self.datePicker.countDownDuration) //countdownduration = 시간이 몇초인지 알려줌
         switch self.timerStatus {
         case .end:
+            self.currentSeconds = self.duration
             self.timerStatus = .start
             //timer라벨과 프로그레스뷰 포시되도록(start를 눌렀으니까)
             self.setTimerInfoViewVisible(isHidden: false)
             self.datePicker.isHidden = true
             self.toggleButton.isSelected = true
             self.cancelButton.isEnabled = true // 취소버튼활성화되도록
-            
+            self.startTimer()
             
         case .start:
             self.timerStatus = .pause
             self.toggleButton.isSelected = false
+            self.timer?.suspend()
             
         case .pause:
             self.timerStatus = .start
             self.toggleButton.isSelected = true
+            self.timer?.resume()
+        }
+    }
+    
+}
+
+# 타이머기능 구현(시분초 표시)
+//
+//  ViewController.swift
+//  pomodoro
+//
+//  Created by YUL on 2021/12/24.
+//
+
+import UIKit
+
+enum TimerStatus {
+    case start
+    case pause
+    case end
+}
+
+class ViewController: UIViewController {
+
+    @IBOutlet weak var timerLabel: UILabel!
+    @IBOutlet weak var progressView: UIProgressView!
+    @IBOutlet weak var datePicker: UIDatePicker!
+    
+    @IBOutlet weak var cancelButton: UIButton!
+    @IBOutlet weak var toggleButton: UIButton!
+    
+    //타이머에 설정된 시간을 초로 저장하는 프로퍼티
+    var duration = 60
+    var timerStatus: TimerStatus = .end        //초기값end로 설정
+    var timer : DispatchSourceTimer?    //OPTIONAL이되도록 뒤에 물음표
+    var currentSeconds = 0
+    
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.configureToggleButton()
+    }
+    
+    func setTimerInfoViewVisible(isHidden: Bool) {
+        self.timerLabel.isHidden = isHidden
+        self.progressView.isHidden = isHidden
+    }
+    
+    func configureToggleButton() {
+        self.toggleButton.setTitle("시작", for: .normal)
+        self.toggleButton.setTitle("일시정지", for: .selected)
+        //버튼의 상태에 따라 title변경
+    }
+    
+    func startTimer() {
+        if self.timer == nil {
+            self.timer = DispatchSource.makeTimerSource(flags: [], queue: .main)
+            self.timer?.schedule(deadline: .now(), repeating: 1) // "지금부터" "1초마다" 반복
+            self.timer?.setEventHandler(handler: { [weak self] in
+                guard let self = self else { return }                   // strong reference선언(?) -> 선언후 모든 self뒤에 물음표 제거해주었다
+                self.currentSeconds -= 1 //1초에한번씩 호출하며 감소시킨다
+                let hour = self.currentSeconds / 3600   // 시각 구하기
+                let minute = (self.currentSeconds % 3600) / 60
+                let seconds = (self.currentSeconds % 3600) % 60
+                self.timerLabel.text = String(format: "%02d:%02d:%02d", hour, minute, seconds) //timelabel 표시 => 타이머에서 시분초 표시됨.
+                
+                if self.currentSeconds  <= 0 {
+                    // 타이머종료
+                    self.stopTimer()
+                }
+            })
+            self.timer?.resume()
+        }
+    }
+    
+    func stopTimer() {
+        if self.timerStatus == .pause {
+            self.timer?.resume()
+        }
+        self.timerStatus = .end
+        self.cancelButton.isEnabled = false
+        self.setTimerInfoViewVisible(isHidden: true)    //time,프로그레스뷰가 표시되지 않도록
+        self.datePicker.isHidden = false // datepicker가다시표시되도록
+        self.toggleButton.isSelected = false // togglebutton 타이틀이 선택되도록
+        self.timer?.cancel()
+        self.timer = nil
+    }
+    
+    @IBAction func tapCancelButton(_ sender: UIButton) {
+        switch self.timerStatus {
+        case .start, .pause:
+            self.stopTimer()
+            
+        default:
+            break
+        }
+    }
+    
+    @IBAction func tapTogglerButton(_ sender: UIButton) {
+        self.duration = Int(self.datePicker.countDownDuration) //countdownduration = 시간이 몇초인지 알려줌
+        switch self.timerStatus {
+        case .end:
+            self.currentSeconds = self.duration
+            self.timerStatus = .start
+            //timer라벨과 프로그레스뷰 포시되도록(start를 눌렀으니까)
+            self.setTimerInfoViewVisible(isHidden: false)
+            self.datePicker.isHidden = true
+            self.toggleButton.isSelected = true
+            self.cancelButton.isEnabled = true // 취소버튼활성화되도록
+            self.startTimer()
+            
+        case .start:
+            self.timerStatus = .pause
+            self.toggleButton.isSelected = false
+            self.timer?.suspend()
+            
+        case .pause:
+            self.timerStatus = .start
+            self.toggleButton.isSelected = true
+            self.timer?.resume()
         }
     }
     
