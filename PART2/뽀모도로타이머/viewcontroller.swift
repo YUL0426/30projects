@@ -111,7 +111,7 @@ class ViewController: UIViewController {
     
 }
 
-# 타이머기능 구현(시분초 표시)
+# 타이머기능 구현(시분초 표시, 알람종료시 알람음 설정)
 //
 //  ViewController.swift
 //  pomodoro
@@ -120,6 +120,7 @@ class ViewController: UIViewController {
 //
 
 import UIKit
+import AudioToolbox             //알람을 설정을 위한 import
 
 enum TimerStatus {
     case start
@@ -164,16 +165,20 @@ class ViewController: UIViewController {
             self.timer = DispatchSource.makeTimerSource(flags: [], queue: .main)
             self.timer?.schedule(deadline: .now(), repeating: 1) // "지금부터" "1초마다" 반복
             self.timer?.setEventHandler(handler: { [weak self] in
-                guard let self = self else { return }                   // strong reference선언(?) -> 선언후 모든 self뒤에 물음표 제거해주었다
+                guard let self = self else { return }
                 self.currentSeconds -= 1 //1초에한번씩 호출하며 감소시킨다
                 let hour = self.currentSeconds / 3600   // 시각 구하기
                 let minute = (self.currentSeconds % 3600) / 60
                 let seconds = (self.currentSeconds % 3600) % 60
-                self.timerLabel.text = String(format: "%02d:%02d:%02d", hour, minute, seconds) //timelabel 표시 => 타이머에서 시분초 표시됨.
+                self.timerLabel.text = String(format: "%02d:%02d:%02d", hour, minute, seconds) //timelabel 표시
+                
+                self.progressView.progress = Float(self.currentSeconds) / Float(self.duration) //왜냐하면 progressview는 float타입으로 대입하여야함
                 
                 if self.currentSeconds  <= 0 {
                     // 타이머종료
                     self.stopTimer()
+                    // 종료되었을 시 아이폰 기본사운드 울릴 수 있도록
+                    AudioServicesPlaySystemSound(1005)
                 }
             })
             self.timer?.resume()
@@ -229,4 +234,5 @@ class ViewController: UIViewController {
     }
     
 }
+
 
